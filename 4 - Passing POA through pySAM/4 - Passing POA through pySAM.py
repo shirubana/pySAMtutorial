@@ -5,29 +5,35 @@
 # 
 # 
 # Needs a weatherfile with a "POA" column input; do not include DNI DHI or GHI on the weatherfile.
+# 
+# Using open-source modules from row 4 as baseline. LONGi Green Energy Technology Co._Ltd. LR6-72PH-370M
 
-# In[1]:
+# In[ ]:
 
 
+import PySAM
 import PySAM.Pvsamv1 as PV
 import PySAM.Grid as Grid
 import PySAM.Utilityrate5 as UtilityRate
 import PySAM.Cashloan as Cashloan
-import pathlib
+import pathlib, os
 import json
-import os
-
-
-# In[2]:
-
-
-import PySAM
 import pvlib
+import pandas as pd
+
+
+# In[ ]:
+
+
+import sys, platform
+print("Working on a ", platform.system(), platform.release())
+print("Python version ", sys.version)
+print("Pandas version ", pd.__version__)
 print("Pvlib version: ", pvlib.__version__)
 print("PySAM version: ", PySAM.__version__)
 
 
-# In[3]:
+# In[ ]:
 
 
 sif4 = 'Row4Json'
@@ -41,7 +47,7 @@ ur4 = UtilityRate.from_existing(pv4)
 so4 = Cashloan.from_existing(grid4, 'FlatPlatePVCommercial')
 
 
-# In[4]:
+# In[ ]:
 
 
 for count, module in enumerate([pv4, grid4, ur4, so4]):
@@ -60,7 +66,7 @@ for count, module in enumerate([pv4, grid4, ur4, so4]):
 
 # ##### Sanity checks
 
-# In[5]:
+# In[ ]:
 
 
 pv4.SolarResource.solar_resource_file
@@ -71,38 +77,28 @@ pv4.SolarResource.albedo
 
 # # LOOP THROUGH COMBOS
 
-# In[6]:
-
-
-import pandas as pd
-
-
-# In[7]:
-
-
-# 4-Bifi: LONGi Green Energy Technology Co._Ltd. LR6-72PH-370M
-
-
-# In[8]:
+# In[ ]:
 
 
 # For unknown reasons, pySAM does not calculate this number and you have to obtain it from the GUI.
 system_capacity4 = 73.982   
 
 
-# In[9]:
+# In[ ]:
 
 
+# TODO: TRACKER ANGLES: Load tracker angles here into an array the same length as the weatherfile (8760). 
+trackerangles = # 
+
+
+# In[ ]:
+
+
+sims = ['WF_SAM_P00.csv'] # Weather file(s) with "POA" column input.
 ResultsFolder = r'Results'
 
 
-# In[10]:
-
-
-sims = ['WF_SAM_P00.csv'] # Weather file with "POA" column input.
-
-
-# In[13]:
+# In[ ]:
 
 
 dfAll = pd.DataFrame()
@@ -132,6 +128,9 @@ for ii in range(0, len(sims)): # # loop here over all the weather files or sims.
     else:
         pv4.Shading.subarray1_shade_mode = 1.0
 
+    # Using custom tracker angles
+    pv4.SystemDesign.subarray1_use_custom_rot_angles = 1
+    pv4.SystemDesign.subarray1_custom_rot_angles_array = trackerangles # MUST BE same length as weatherfile.
 
     grid4.SystemOutput.gen = [0] * len(datelist)  # p_out   # let's set all the values to 0
     pv4.execute()
@@ -145,6 +144,7 @@ for ii in range(0, len(sims)): # # loop here over all the weather files or sims.
     celltemp4 = list(results['subarray1_celltemp'])
     rear4 = list(results['subarray1_poa_rear'])
     front4 = list(results['subarray1_poa_front'])
+    custom_angles = list(results["subarray1_axisrot"])
 
     dni = list(results['dn'])
     dhi = list(results['df'])
@@ -171,7 +171,7 @@ for ii in range(0, len(sims)): # # loop here over all the weather files or sims.
     dfAll = pd.concat([dfAll, res], ignore_index=True, axis=0)
 
 
-# In[14]:
+# In[ ]:
 
 
 dfAll.to_pickle('Results_pysam.pkl')
