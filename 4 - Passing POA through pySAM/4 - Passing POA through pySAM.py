@@ -8,7 +8,7 @@
 # 
 # Using open-source modules from row 4 as baseline. LONGi Green Energy Technology Co._Ltd. LR6-72PH-370M
 
-# In[ ]:
+# In[1]:
 
 
 import PySAM
@@ -22,7 +22,7 @@ import pvlib
 import pandas as pd
 
 
-# In[ ]:
+# In[2]:
 
 
 import sys, platform
@@ -33,10 +33,18 @@ print("Pvlib version: ", pvlib.__version__)
 print("PySAM version: ", PySAM.__version__)
 
 
-# In[ ]:
+# In[14]:
+
+
+
+
+
+# In[3]:
 
 
 sif4 = 'Row4Json'
+sif4 = 'Newjson'
+
 jsonnames = ['Row4PrismBifi']
 
 file_names = ["pvsamv1", "grid", "utilityrate5", "cashloan"]
@@ -47,7 +55,7 @@ ur4 = UtilityRate.from_existing(pv4)
 so4 = Cashloan.from_existing(grid4, 'FlatPlatePVCommercial')
 
 
-# In[ ]:
+# In[10]:
 
 
 for count, module in enumerate([pv4, grid4, ur4, so4]):
@@ -58,6 +66,13 @@ for count, module in enumerate([pv4, grid4, ur4, so4]):
             if k == 'number_inputs':
                 continue
             try:
+                if sys.version.split(' ')[0] == '3.11.7': 
+                    # Check needed for python 3.10.7 and perhaps other releases above 3.10.4.
+                    # This prevents the failure "UnicodeDecodeError: 'utf-8' codec can't decode byte... 
+                    # This bug will be fixed on a newer version of pysam (currently not working on 5.1.0)
+                    if 'adjust_' in k:  # This check is needed for Python 3.10.7 and some others. Not needed for 3.7.4
+                        print(k)
+                        k = k.split('adjust_')[1]
                 module.value(k, v)
             except AttributeError:
                 # there is an error is setting the value for ppa_escalation
@@ -66,7 +81,7 @@ for count, module in enumerate([pv4, grid4, ur4, so4]):
 
 # ##### Sanity checks
 
-# In[ ]:
+# In[11]:
 
 
 pv4.SolarResource.solar_resource_file
