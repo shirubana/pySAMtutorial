@@ -33,12 +33,6 @@ print("Pvlib version: ", pvlib.__version__)
 print("PySAM version: ", PySAM.__version__)
 
 
-# In[14]:
-
-
-
-
-
 # In[3]:
 
 
